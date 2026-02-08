@@ -73,6 +73,15 @@ final class AgencyDetailViewModel {
         } catch {
             print("❌ [AgencyDetailViewModel] Error fetching summary: \(error)")
              if (error as? URLError)?.code == .cancelled { return }
+            
+            // If 404/NotFound, just stop refreshing. This allows the "Generate" button to show.
+            let nsError = error as NSError
+            if nsError.domain == "NetworkService" && nsError.code == 404 {
+                print("ℹ️ [AgencyDetailViewModel] Summary not found (Normal for new items).")
+                await MainActor.run { isRefreshing = false }
+                return
+            }
+            
             await MainActor.run {
                 self.error = error.localizedDescription
                 isRefreshing = false

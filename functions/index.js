@@ -274,8 +274,12 @@ const BUDGET_PRIORITY_AGENCIES = [
 
 /**
  * Helper to process a single agency summary
+ * @param {string|object} agencyOrId - Agency slug or object
+ * @param {boolean} force - Whether to force regeneration even if current
+ * @param {boolean} generateIfNeeded - Whether to generate a summary if one is missing/stale. 
+ *                                     Set to false for "lazy" API checks (returns null if missing).
  */
-async function processAgencySummary(agencyOrId, force = false) {
+async function processAgencySummary(agencyOrId, force = false, generateIfNeeded = true) {
     let agency = null;
 
     if (typeof agencyOrId === 'string') {
@@ -331,6 +335,12 @@ async function processAgencySummary(agencyOrId, force = false) {
         if (isCurrent) {
             console.log(`Skipping ${agency.name} - compliant summary already exists.`);
             return existingData;
+        }
+
+        // If not current, and we are NOT allowed to generate, return what we have (stale) or null
+        if (!generateIfNeeded) {
+            console.log(`Skipping generation for ${agency.name} (Lazy Mode).`);
+            return existingData || null; // Return null if nothing exists
         }
     }
 
@@ -443,7 +453,15 @@ app.get("/summarize", validateAuth, async (req, res) => {
         if (!agency_id) {
             return res.status(400).json({ status: "error", message: "Missing agency_id parameter." });
         }
-        const result = await processAgencySummary(agency_id, force === "true");
+
+        // Lazy Mode: Only generate if force=true. Otherwise, return existing/stale or 404.
+        const shouldGenerate = (force === "true");
+        const result = await processAgencySummary(agency_id, shouldGenerate, shouldGenerate);
+
+        if (!result) {
+            return res.status(404).json({ status: "error", message: "Summary not found. Use force=true to generate." });
+        }
+
         res.status(200).json({ status: "success", data: result });
     } catch (error) {
         console.error("Summarization Error:", error);
