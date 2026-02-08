@@ -9,13 +9,12 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 let genAI = null;
 let model = null;
 
-function getAiModel() {
-    const apiKey = process.env.GOOGLE_AI_API_KEY;
+function getAiModel(apiKey) {
     if (!apiKey) return null;
 
     if (!model) {
         genAI = new GoogleGenerativeAI(apiKey);
-        model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     }
     return model;
 }
@@ -26,8 +25,8 @@ function getAiModel() {
  * @param {string} context - The specific request (e.g., "baseline", "changes-since-2023").
  * @returns {Promise<string>}
  */
-async function generateSummary(content, context, historicalContent = null) {
-    const aiModel = getAiModel();
+async function generateSummary(content, context, historicalContent = null, apiKey = null) {
+    const aiModel = getAiModel(apiKey || process.env.GOOGLE_AI_API_KEY);
     if (!aiModel) {
         return "Error: GOOGLE_AI_API_KEY is not set. Please provide an API key to enable AI summaries.";
     }

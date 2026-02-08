@@ -45,7 +45,6 @@ async function ingestData(titleFilter = null, targetDate = null) {
         console.log("Starting data ingestion from eCFR...");
 
         // 1. Fetches the list of Agencies and Titles from the eCFR 'Titles' endpoint
-        // 1. Fetches the list of Agencies and Titles from the eCFR 'Titles' endpoint
         const [titles, agencies] = await Promise.all([
             ecfr.fetchTitles(),
             ecfr.fetchAgencies()
@@ -339,11 +338,20 @@ async function processAgencySummary(agency, force = false) {
         console.warn("Failed to fetch amendments for context: " + e.message);
     }
 
+    const apiKey = process.env.GOOGLE_AI_API_KEY || (functions.config().gemini && functions.config().gemini.key);
+
+    if (!apiKey) {
+        throw new Error("Missing GOOGLE_AI_API_KEY in environment or config.");
+    }
+
+    // Initialize Gemini with key (although gemini.js handles it, we want to fail fast here or ensure it's set)
+    process.env.GOOGLE_AI_API_KEY = apiKey;
+
     const [summary2023, changesSince, recentBatch, titleChange] = await Promise.all([
-        generateSummary(historyData.text, "baseline-2023"),
-        generateSummary(activeContext, "changes-since-2023", historyData.text),
-        generateSummary(activeContext, "recent-batch"),
-        generateSummary(activeContext, "title-level-change")
+        generateSummary(historyData.text, "baseline-2023", null, apiKey),
+        generateSummary(activeContext, "changes-since-2023", historyData.text, apiKey),
+        generateSummary(activeContext, "recent-batch", null, apiKey),
+        generateSummary(activeContext, "title-level-change", null, apiKey)
     ]);
 
     const result = {
@@ -391,34 +399,109 @@ async function updateStats() {
 
     if (!Array.isArray(agencies)) return null;
 
-    // 1. Top 10 Footprint
-    const top_agencies = agencies
-        .filter(a => a.word_count_proxy)
-        .sort((a, b) => b.word_count_proxy - a.word_count_proxy)
-        .slice(0, 10)
-        .map(a => ({ name: a.short_name || a.name, value: a.word_count_proxy }));
-
-    // 2. CFR Title Distribution
-    const title_distribution = {};
+    // 1. Top 10 Footprint (Aggregated by Department)
+    const footprintMap = {};
     agencies.forEach(a => {
-        (a.cfr_references || []).forEach(ref => {
-            const t = `Title ${ref.title}`;
-            title_distribution[t] = (title_distribution[t] || 0) + 1;
-        });
+        if (a.word_count_proxy) {
+            const key = a.parent_agency_name || a.name;
+            footprintMap[key] = (footprintMap[key] || 0) + a.word_count_proxy;
+        }
     });
 
-    // 3. Amendment Timeline
-    const timeline = agencies.reduce((acc, a) => {
-        if (a.latest_amended_on) {
-            const year = a.latest_amended_on.split("-")[0];
-            acc[year] = (acc[year] || 0) + 1;
+    const top_agencies = Object.entries(footprintMap)
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 10);
+
+    // 2. CFR Title Stats ("Most Change" - Amended Since 2024)
+    const REFERENCE_DATE = "2024-01-01";
+    const titleStatsMap = {};
+
+    const CFR_TITLES = {
+        1: "General Provisions", 2: "Grants and Agreements", 3: "The President", 4: "Accounts", 5: "Administrative Personnel",
+        6: "Domestic Security", 7: "Agriculture", 8: "Aliens and Nationality", 9: "Animals and Animal Products", 10: "Energy",
+        11: "Federal Elections", 12: "Banks and Banking", 13: "Business Credit and Assistance", 14: "Aeronautics and Space", 15: "Commerce and Foreign Trade",
+        16: "Commercial Practices", 17: "Commodity and Securities Exchanges", 18: "Conservation of Power and Water Resources", 19: "Customs Duties", 20: "Employees' Benefits",
+        21: "Food and Drugs", 22: "Foreign Relations", 23: "Highways", 24: "Housing and Urban Development", 25: "Indians",
+        26: "Internal Revenue", 27: "Alcohol, Tobacco Products and Firearms", 28: "Judicial Administration", 29: "Labor", 30: "Mineral Resources",
+        31: "Money and Finance: Treasury", 32: "National Defense", 33: "Navigation and Navigable Waters", 34: "Education", 35: "Panama Canal",
+        36: "Parks, Forests, and Public Property", 37: "Patents, Trademarks, and Copyrights", 38: "Pensions, Bonuses, and Veterans' Relief", 39: "Postal Service", 40: "Protection of Environment",
+        41: "Public Contracts and Property Management", 42: "Public Health", 43: "Public Lands: Interior", 44: "Emergency Management and Assistance", 45: "Public Welfare",
+        46: "Shipping", 47: "Telecommunication", 48: "Federal Acquisition Regulations System", 49: "Transportation", 50: "Wildlife and Fisheries"
+    };
+
+    agencies.forEach(a => {
+        if (a.latest_amended_on && a.latest_amended_on >= REFERENCE_DATE) {
+            (a.cfr_references || []).forEach(ref => {
+                const name = CFR_TITLES[parseInt(ref.title)] || "Unknown";
+                const t = `Title ${ref.title}: ${name}`;
+
+                if (!titleStatsMap[t]) {
+                    titleStatsMap[t] = { count: 0, agencies: [] };
+                }
+                // Avoid duplicates if agency references same title multiple times
+                if (!titleStatsMap[t].agencies.includes(a.short_name || a.name)) {
+                    titleStatsMap[t].count += 1;
+                    titleStatsMap[t].agencies.push(a.short_name || a.name);
+                }
+            });
         }
-        return acc;
-    }, {});
+    });
+
+    const title_stats = Object.entries(titleStatsMap)
+        .map(([title, data]) => ({
+            title,
+            count: data.count,
+            agencies: data.agencies.slice(0, 5) // Limit to top 5 names for display
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+
+    // 3. Amendment Activity (Past 12 Months Snapshot)
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    const cutoffDate = oneYearAgo.toISOString().split("T")[0];
+
+    const timelineRaw = {};
+    const orgTotals = {};
+
+    agencies.forEach(a => {
+        // Check if agency was amended in the last year
+        if (a.latest_amended_on && a.latest_amended_on >= cutoffDate) {
+            const org = a.parent_agency_name || a.name;
+            const bucket = "Past 12 Months";
+
+            if (!timelineRaw[bucket]) timelineRaw[bucket] = {};
+            timelineRaw[bucket][org] = (timelineRaw[bucket][org] || 0) + 1;
+            orgTotals[org] = (orgTotals[org] || 0) + 1;
+        }
+    });
+
+    // Identify Top 10 active organizations (increased from 5 for better distribution)
+    const topOrgs = Object.entries(orgTotals)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(entry => entry[0]);
+
+    // Flatten into TimelinePoints
+    const timeline = [];
+    Object.entries(timelineRaw).forEach(([year, orgsMap]) => {
+        let otherCount = 0;
+        Object.entries(orgsMap).forEach(([org, count]) => {
+            if (topOrgs.includes(org)) {
+                timeline.push({ year, organization: org, count });
+            } else {
+                otherCount += count;
+            }
+        });
+        if (otherCount > 0) {
+            timeline.push({ year, organization: "Other Agencies", count: otherCount });
+        }
+    });
 
     const statsData = {
         top_agencies,
-        title_distribution,
+        title_stats,
         timeline,
         updated_at: new Date().toISOString()
     };
@@ -458,7 +541,7 @@ app.get("/amendments", async (req, res) => {
             date: r.starts_on || r.publication_date || "Unknown Date",
             heading: r.headings?.section || r.headings?.part || "Unknown Section",
             title: `Title ${r.hierarchy?.title || "?"}`,
-            description: r.full_text_excerpt || "",
+            description: r.full_text_excerpt || r.headings?.description || r.headings?.part || r.headings?.subpart || "No additional details available.",
             url: r.structure_index?.[0] ? `https://www.ecfr.gov/current/title-${r.hierarchy.title}/section-${r.structure_index[0]}` : null
         }));
 
@@ -493,8 +576,4 @@ exports.scheduledanalysis = onSchedule({
 });
 
 // Expose Express API as a single Cloud Function (v2 syntax):
-exports.api = onRequest({
-    timeoutSeconds: 540,
-    memory: "2GiB",
-    secrets: ["GOOGLE_AI_API_KEY"]
-}, app);
+exports.api = functions.https.onRequest(app);
