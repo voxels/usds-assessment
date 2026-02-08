@@ -26,6 +26,11 @@ struct SidebarView: View {
     @Binding var selectedDepartment: Agency?
     @Binding var selectedAgency: Agency?
     @Binding var activeTool: SidebarTool?
+    
+    // Dependencies for Tool Views
+    var globalAmendments: [AmendmentTransfer]
+    var onRefresh: () async -> Void
+
     @State private var sortOrder: DepartmentSort = .alphabetical
     @State private var searchText = ""
     @State private var showSettings = false
@@ -58,11 +63,7 @@ struct SidebarView: View {
                         Text("No results found").foregroundColor(.secondary)
                     } else {
                         ForEach(searchResults) { agency in
-                             Button {
-                                 selectedAgency = agency
-                                 selectedDepartment = nil
-                                 activeTool = nil
-                             } label: {
+                             NavigationLink(value: NavigationDestination.agencyDetail(agency)) {
                                  VStack(alignment: .leading) {
                                      Text(agency.name).font(.headline)
                                      if let p = agency.parentAgencyName {
@@ -77,14 +78,9 @@ struct SidebarView: View {
                 // Tools Section
                 Section("Insights") {
                     ForEach(SidebarTool.allCases) { tool in
-                        Button {
-                            activeTool = tool
-                            selectedDepartment = nil
-                            selectedAgency = nil // Clear detail view
-                        } label: {
+                        NavigationLink(value: NavigationDestination.tool(tool)) {
                             Label(tool.rawValue, systemImage: tool.icon)
                         }
-                        .foregroundColor(activeTool == tool ? .accentColor : .primary)
                     }
                 }
 
@@ -129,9 +125,42 @@ struct SidebarView: View {
         .sheet(isPresented: $showSettings) {
              SettingsView()
         }
+        .navigationDestination(for: NavigationDestination.self) { dest in
+            switch dest {
+            case .agencyDetail(let agency):
+                AgencyDetailView(agency: agency, dataService: NetworkService.shared)
+                    .onAppear {
+                        selectedAgency = agency
+                        selectedDepartment = nil
+                        activeTool = nil
+                    }
+            case .departmentList(let dept):
+                AgencyListView(department: dept, selectedAgency: $selectedAgency)
+                    .onAppear {
+                        selectedDepartment = dept
+                        activeTool = nil
+                    }
+            case .tool(let tool):
+                if tool == .changes {
+                    ChangesView(selectedAgency: $selectedAgency,
+                                globalAmendments: globalAmendments,
+                                onRefresh: onRefresh)
+                    .onAppear {
+                        activeTool = tool
+                        selectedDepartment = nil
+                        selectedAgency = nil // changes view handles agency selection differently?
+                    }
+                } else {
+                    // Overview
+                    GlobalDashboardView(activeTool: $activeTool, selectedAgency: $selectedAgency)
+                        .onAppear {
+                            activeTool = tool
+                            selectedDepartment = nil
+                        }
+                }
+            }
+        }
     }
-
-
 
     private func sortedDepartments(_ depts: [Agency]) -> [Agency] {
         switch sortOrder {
@@ -145,11 +174,7 @@ struct SidebarView: View {
     }
  
     private func departmentRow(_ department: Agency) -> some View {
-        Button {
-            selectedDepartment = department
-            activeTool = nil
-            selectedAgency = nil
-        } label: {
+        NavigationLink(value: NavigationDestination.departmentList(department)) {
             HStack {
                 Label(department.name,
                       systemImage: department.isFavorite ? "star.fill" : "building.columns")
@@ -166,7 +191,6 @@ struct SidebarView: View {
                 }
             }
         }
-        .foregroundColor(selectedDepartment?.slug == department.slug ? .accentColor : .primary)
         .swipeActions(edge: .trailing) {
             Button {
                 department.isFavorite.toggle()
@@ -185,4 +209,10 @@ struct SidebarView: View {
             }
         }
     }
+}
+
+enum NavigationDestination: Hashable {
+    case agencyDetail(Agency)
+    case departmentList(Agency)
+    case tool(SidebarTool)
 }

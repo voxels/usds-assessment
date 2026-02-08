@@ -4,13 +4,17 @@ import SwiftData
 struct ContentView: View {
     @State private var viewModel = AppViewModel()
 
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
+
     var body: some View {
         @Bindable var vm = viewModel
 
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             SidebarView(selectedDepartment: $vm.selectedDepartment,
                         selectedAgency: $vm.selectedAgency,
-                        activeTool: $vm.activeTool)
+                        activeTool: $vm.activeTool,
+                        globalAmendments: viewModel.globalAmendments,
+                        onRefresh: { await viewModel.syncOnLaunch() })
         } content: {
             if let tool = viewModel.activeTool, tool == .changes {
                 ChangesView(selectedAgency: $vm.selectedAgency,
