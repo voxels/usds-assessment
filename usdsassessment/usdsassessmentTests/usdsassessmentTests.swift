@@ -31,6 +31,11 @@ final class MockDataService: DataServiceProtocol, @unchecked Sendable {
         if shouldThrow { throw URLError(.notConnectedToInternet) }
         return []
     }
+
+    func fetchGlobalAmendments() async throws -> [AmendmentTransfer] {
+        if shouldThrow { throw URLError(.notConnectedToInternet) }
+        return []
+    }
 }
 
 // MARK: - Transfer Model Decoding Tests

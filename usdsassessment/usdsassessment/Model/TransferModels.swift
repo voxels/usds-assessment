@@ -123,12 +123,18 @@ struct StatsResponse: Codable, Sendable {
 // MARK: - Amendment Transfer
 
 struct AmendmentTransfer: Codable, Sendable, Identifiable {
-    var id: String { date + heading }
+    let id = UUID()
     let date: String
     let heading: String
     let title: String
     let description: String?
     let url: String?
+    let agencySlug: String?
+    
+    private enum CodingKeys: String, CodingKey {
+        case date, heading, title, description, url
+        case agencySlug = "agency_slug"
+    }
 }
 
 struct AmendmentsResponse: Codable, Sendable {

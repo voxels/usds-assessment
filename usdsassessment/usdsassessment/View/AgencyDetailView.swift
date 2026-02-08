@@ -2,24 +2,31 @@ import SwiftUI
 
 struct AgencyDetailView: View {
     @State private var viewModel: AgencyDetailViewModel
+    @Environment(ProcessingStore.self) private var processingStore
 
     init(agency: Agency, dataService: DataServiceProtocol) {
         _viewModel = State(initialValue: AgencyDetailViewModel(agency: agency, dataService: dataService))
+    }
+    
+    private func refreshSummary() async {
+        processingStore.startProcessing(viewModel.agency.slug)
+        await viewModel.fetchSummary(force: true)
+        processingStore.stopProcessing(viewModel.agency.slug)
     }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 headerSection
-                amendmentsSection
                 if !viewModel.tags.isEmpty { tagsSection }
                 summaryContent
+                amendmentsSection
             }
             .padding()
         }
         .refreshable {
             // Trigger both AI refresh and data reload
-            await viewModel.fetchSummary(force: true)
+            await refreshSummary()
             await viewModel.loadAmendments()
         }
         .navigationTitle(viewModel.agency.shortName ?? viewModel.agency.name)
@@ -33,7 +40,7 @@ struct AgencyDetailView: View {
                 }
             }
             ToolbarItem {
-                Button { Task { await viewModel.fetchSummary(force: true) } } label: {
+                Button { Task { await refreshSummary() } } label: {
                     Label("Refresh AI", systemImage: "sparkles")
                 }
                 .disabled(viewModel.isRefreshing)
@@ -74,10 +81,10 @@ struct AgencyDetailView: View {
     private var summaryContent: some View {
         if let s = viewModel.agency.summary {
             VStack(alignment: .leading, spacing: 16) {
-                card("2023 Baseline", s.baseline2023)
-                card("Changes Since 2023", s.changesSince2023)
-                card("Recent Batch Highlights", s.recentBatch)
                 card("Latest Title Changes", s.latestTitleChange)
+                card("Recent Batch Highlights", s.recentBatch)
+                card("Changes Since 2023", s.changesSince2023)
+                card("2023 Baseline", s.baseline2023)
                 Text("Generated: \(s.generatedAt)").font(.caption2).foregroundColor(.secondary)
             }
         } else if viewModel.isRefreshing {
@@ -92,7 +99,7 @@ struct AgencyDetailView: View {
                 } else {
                     Text("No AI Summary Available").font(.headline)
                 }
-                Button("Generate AI Insights") { Task { await viewModel.fetchSummary(force: true) } }
+                Button("Generate AI Insights") { Task { await refreshSummary() } }
                     .buttonStyle(.borderedProminent)
             }
             .frame(maxWidth: .infinity).padding(.vertical, 40)
@@ -101,7 +108,7 @@ struct AgencyDetailView: View {
 
     private func card(_ title: String, _ content: String) -> some View {
         GroupBox(label: Text(title).font(.subheadline).bold()) {
-            Text(content).font(.body).fixedSize(horizontal: false, vertical: true).padding(.top, 4)
+            Text(.init(content)).font(.body).fixedSize(horizontal: false, vertical: true).padding(.top, 4)
         }
     }
 

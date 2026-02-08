@@ -275,9 +275,25 @@ const BUDGET_PRIORITY_AGENCIES = [
 /**
  * Helper to process a single agency summary
  */
-async function processAgencySummary(agency, force = false) {
+async function processAgencySummary(agencyOrId, force = false) {
+    let agency = null;
+
+    if (typeof agencyOrId === 'string') {
+        const snapshot = await db.ref("agencies").orderByChild("slug").equalTo(agencyOrId).once("value");
+        const val = snapshot.val();
+        if (val) {
+            agency = Object.values(val)[0];
+        } else {
+            // Fallback: try by key directly if slug didn't match (less likely but possible)
+            const snap2 = await db.ref("agencies").child(agencyOrId).once("value");
+            agency = snap2.val();
+        }
+    } else {
+        agency = agencyOrId;
+    }
+
     if (!agency) {
-        throw new Error(`Agency object is missing.`);
+        throw new Error(`Agency not found for ID: ${agencyOrId}`);
     }
 
     // 2. Fetch full text for specific periods (Dec 31, 2023 and Current)
@@ -303,10 +319,11 @@ async function processAgencySummary(agency, force = false) {
     const today = new Date().toISOString().split("T")[0];
     const contentDate = agency.latest_amended_on || today;
 
-    if (force !== true) {
-        const existingSnapshot = await db.ref("summaries").child(agency.slug).once("value");
-        const existingData = existingSnapshot.val();
+    // Always fetch existing data for potential fallback usage
+    const existingSnapshot = await db.ref("summaries").child(agency.slug).once("value");
+    const existingData = existingSnapshot.val();
 
+    if (force !== true) {
         // Check if we analyzed THIS version already (checksum)
         const isCurrent = existingData &&
             existingData.checksum === agency.checksum;
@@ -319,24 +336,44 @@ async function processAgencySummary(agency, force = false) {
 
     console.log(`Generating AI summaries for ${agency.name}...`);
 
-    // Fetch History
-    const historyData = await fetchDeepContent("2023-12-31");
-    // Fetch Current (with real word count)
-    const currentData = await fetchDeepContent(contentDate);
-
-    // Fetch Recent Amendments for Context
-    let activeContext = currentData.text;
+    // 1. Fetch Recent Amendments FIRST to determine the true "current" state
+    let amendments = [];
     try {
-        const amendments = await ecfr.fetchRecentAmendments(agency.slug);
-        if (amendments.length > 0) {
-            const contextStr = amendments.map(a =>
-                `- [${a.date}] ${a.heading}: ${a.description || a.title}`
-            ).join("\n");
-            activeContext = `RECENT AMENDMENTS:\n${contextStr}\n\nREGULATORY TEXT SAMPLE:\n${currentData.text}`;
-        }
+        amendments = await ecfr.fetchRecentAmendments(agency.slug);
     } catch (e) {
-        console.warn("Failed to fetch amendments for context: " + e.message);
+        console.warn(`Failed to fetch amendments for ${agency.name}: ${e.message}`);
     }
+
+    // Determine the most recent amendment date from live data
+    // fallback to stored date, then today
+    let effectiveDate = agency.latest_amended_on || new Date().toISOString().split("T")[0];
+
+    if (amendments.length > 0) {
+        // Amendments are ordered newest_first by API
+        const latestFromApi = amendments[0].date || amendments[0].publication_date;
+        if (latestFromApi && latestFromApi > effectiveDate) {
+            console.log(`Found newer amendment for ${agency.name}: ${latestFromApi} (was ${effectiveDate})`);
+            effectiveDate = latestFromApi;
+        }
+    }
+
+    // 2. Fetch Content based on the FRESH effective date
+    const historyData = await fetchDeepContent("2023-12-31");
+    const currentData = await fetchDeepContent(effectiveDate);
+
+    // Context for AI
+    let activeContext = currentData.text;
+    if (amendments.length > 0) {
+        const contextStr = amendments.map(a => {
+            const date = a.starts_on || a.publication_date || "Unknown Date";
+            const heading = a.headings?.section || a.headings?.part || "Unknown Section";
+            const desc = a.full_text_excerpt || a.headings?.description || a.headings?.part || "No details";
+            return `- [${date}] ${heading}: ${desc}`;
+        }).join("\n");
+
+        activeContext = `RECENT AMENDMENTS (as of ${effectiveDate}):\n${contextStr}\n\nREGULATORY TEXT SAMPLE:\n${currentData.text}`;
+    }
+
 
     const apiKey = process.env.GOOGLE_AI_API_KEY || (functions.config().gemini && functions.config().gemini.key);
 
@@ -347,30 +384,54 @@ async function processAgencySummary(agency, force = false) {
     // Initialize Gemini with key (although gemini.js handles it, we want to fail fast here or ensure it's set)
     process.env.GOOGLE_AI_API_KEY = apiKey;
 
-    const [summary2023, changesSince, recentBatch, titleChange] = await Promise.all([
-        generateSummary(historyData.text, "baseline-2023", null, apiKey),
-        generateSummary(activeContext, "changes-since-2023", historyData.text, apiKey),
-        generateSummary(activeContext, "recent-batch", null, apiKey),
-        generateSummary(activeContext, "title-level-change", null, apiKey)
-    ]);
+    try {
+        const [summary2023, changesSince, recentBatch, titleChange] = await Promise.all([
+            generateSummary(historyData.text, "baseline-2023", null, apiKey),
+            generateSummary(activeContext, "changes-since-2023", historyData.text, apiKey),
+            generateSummary(activeContext, "recent-batch", null, apiKey),
+            generateSummary(activeContext, "title-level-change", null, apiKey)
+        ]);
 
-    const result = {
-        agency: agency.name,
-        checksum: agency.checksum,
-        summaries: {
-            baseline_2023: summary2023,
-            changes_since_2023: changesSince,
-            recent_batch: recentBatch,
-            latest_title_change: titleChange
-        },
-        word_count: currentData.est_word_count,
-        generated_at: new Date().toISOString()
-    };
+        // Fallback: If new Recent Batch failed (or is empty error), use the cached one if available
+        let finalRecentBatch = recentBatch;
+        if ((!recentBatch || recentBatch.startsWith("Error")) && existingData && existingData.summaries && existingData.summaries.recent_batch) {
+            console.warn(`Fallback: Using cached 'recent_batch' for ${agency.name} due to generation error.`);
+            finalRecentBatch = existingData.summaries.recent_batch;
+        }
 
-    // Save to RTDB
-    await db.ref("summaries").child(agency.slug).set(result);
-    return result;
+        const result = {
+            agency: agency.name,
+            checksum: agency.checksum,
+            summaries: {
+                baseline_2023: summary2023,
+                changes_since_2023: changesSince,
+                recent_batch: finalRecentBatch,
+                latest_title_change: titleChange
+            },
+            word_count: currentData.est_word_count,
+            generated_at: new Date().toISOString()
+        };
+
+        // Save to RTDB
+        await db.ref("summaries").child(agency.slug).set(result);
+        return result;
+
+    } catch (aiError) {
+        console.error(`AI Generation failed for ${agency.name}:`, aiError);
+
+        // Fallback: Return existing summary if available
+        const fallbackSnapshot = await db.ref("summaries").child(agency.slug).once("value");
+        const fallbackData = fallbackSnapshot.val();
+
+        if (fallbackData) {
+            console.warn(`Returning existing (stale) summary for ${agency.name} as fallback.`);
+            return fallbackData;
+        }
+
+        throw aiError; // No fallback possible
+    }
 }
+
 
 /**
  * Phase 7: AI-Powered Summarization
@@ -527,9 +588,7 @@ app.get("/stats", async (req, res) => {
 app.get("/amendments", async (req, res) => {
     try {
         const { agency_slug } = req.query;
-        if (!agency_slug) {
-            return res.status(400).json({ status: "error", message: "Missing agency_slug parameter." });
-        }
+        // agency_slug is optional now (returns global recent if null)
 
         // Build eCFR Search API URL using service
         // Endpoint: https://www.ecfr.gov/api/search/v1/results
@@ -537,13 +596,25 @@ app.get("/amendments", async (req, res) => {
         const results = await ecfr.fetchRecentAmendments(agency_slug);
 
         // Simplify data for client
-        const amendments = results.map(r => ({
-            date: r.starts_on || r.publication_date || "Unknown Date",
-            heading: r.headings?.section || r.headings?.part || "Unknown Section",
-            title: `Title ${r.hierarchy?.title || "?"}`,
-            description: r.full_text_excerpt || r.headings?.description || r.headings?.part || r.headings?.subpart || "No additional details available.",
-            url: r.structure_index?.[0] ? `https://www.ecfr.gov/current/title-${r.hierarchy.title}/section-${r.structure_index[0]}` : null
-        }));
+        const amendments = results.map(r => {
+            let url = null;
+            if (r.structure_index && r.structure_index.length > 0) {
+                url = `https://www.ecfr.gov/current/title-${r.hierarchy.title}/section-${r.structure_index[0]}`;
+            } else if (r.hierarchy && r.hierarchy.part) {
+                url = `https://www.ecfr.gov/current/title-${r.hierarchy.title}/part-${r.hierarchy.part}`;
+            } else if (r.hierarchy && r.hierarchy.title) {
+                url = `https://www.ecfr.gov/current/title-${r.hierarchy.title}`;
+            }
+
+            return {
+                date: r.starts_on || r.publication_date || "Unknown Date",
+                heading: r.headings?.section || r.headings?.part || "Unknown Section",
+                title: `Title ${r.hierarchy?.title || "?"}`,
+                description: r.full_text_excerpt || r.headings?.description || r.headings?.part || r.headings?.subpart || "No additional details available.",
+                agency_slug: r.agency_slugs && r.agency_slugs.length > 0 ? r.agency_slugs[0] : null,
+                url: url
+            };
+        });
 
         res.status(200).json({ status: "success", data: amendments });
 
@@ -576,4 +647,8 @@ exports.scheduledanalysis = onSchedule({
 });
 
 // Expose Express API as a single Cloud Function (v2 syntax):
-exports.api = functions.https.onRequest(app);
+exports.api = onRequest({
+    timeoutSeconds: 300,
+    memory: "2GiB",
+    secrets: ["GOOGLE_AI_API_KEY"]
+}, app);

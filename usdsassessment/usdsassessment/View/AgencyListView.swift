@@ -4,6 +4,7 @@ import SwiftData
 struct AgencyListView: View {
     var department: Agency?
     @Binding var selectedAgency: Agency?
+    @Environment(ProcessingStore.self) private var processingStore
 
     @Query private var allAgencies: [Agency]
 
@@ -16,21 +17,6 @@ struct AgencyListView: View {
 
     var body: some View {
         List(selection: $selectedAgency) {
-            if let dept = department {
-                Section {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(dept.name)
-                            .font(.title2)
-                            .bold()
-                            .fixedSize(horizontal: false, vertical: true)
-                        Text("\(filteredAgencies.count) Agencies")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.vertical, 8)
-                }
-            }
-            
             ForEach(filteredAgencies) { agency in
                 NavigationLink(value: agency) {
                     VStack(alignment: .leading) {
@@ -38,7 +24,13 @@ struct AgencyListView: View {
                             .font(.headline)
                             .fixedSize(horizontal: false, vertical: true)
                         HStack(spacing: 8) {
-                            if agency.summary != nil {
+                            if processingStore.isProcessing(agency.slug) {
+                                ProgressView()
+                                    .controlSize(.small)
+                                Text("Processing...")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            } else if agency.summary != nil {
                                 Label("Analyzed", systemImage: "sparkles")
                                     .font(.caption2)
                                     .foregroundColor(.green)
@@ -57,6 +49,7 @@ struct AgencyListView: View {
                 }
             }
         }
+        .navigationTitle(selectedAgency?.name ?? department?.name ?? "Agencies")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

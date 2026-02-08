@@ -34,7 +34,8 @@ final class AgencyDetailViewModel {
 
     func loadSummary() async {
         await loadAmendments()
-        if agency.summary != nil {
+        // Check if summary exists AND is up-to-date
+        if let s = agency.summary, s.checksum == agency.checksum {
             await generateTags()
         } else {
             await fetchSummary(force: false)
@@ -48,14 +49,18 @@ final class AgencyDetailViewModel {
                 self.amendments = fetched.sorted { $0.date > $1.date }
             }
         } catch {
+            if (error as? URLError)?.code == .cancelled { return }
              print("Failed to fetch amendments: \(error)")
         }
     }
 
     func fetchSummary(force: Bool) async {
+        print("🤖 [AgencyDetailViewModel] Starting summary fetch for \(agency.slug) (force: \(force))")
         isRefreshing = true
+        error = nil
         do {
             let transfer = try await dataService.fetchSummary(for: agency.slug, force: force)
+            print("✅ [AgencyDetailViewModel] Successfully fetched summary for \(agency.slug)")
             await MainActor.run {
                 if let existing = agency.summary {
                     existing.update(from: transfer)
@@ -66,6 +71,8 @@ final class AgencyDetailViewModel {
             }
             await generateTags()
         } catch {
+            print("❌ [AgencyDetailViewModel] Error fetching summary: \(error)")
+             if (error as? URLError)?.code == .cancelled { return }
             await MainActor.run {
                 self.error = error.localizedDescription
                 isRefreshing = false

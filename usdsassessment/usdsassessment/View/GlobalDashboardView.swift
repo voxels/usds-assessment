@@ -4,19 +4,18 @@ import SwiftData
 
 struct GlobalDashboardView: View {
     @Binding var activeTool: SidebarTool?
+    @Binding var selectedAgency: Agency?
     @Query private var allAgencies: [Agency]
     @Query(sort: \ChecksumRecord.recordedAt, order: .reverse) private var recentChanges: [ChecksumRecord]
     @State private var viewModel = DashboardViewModel(dataService: NetworkService.shared)
 
     private var withSummary: Int { allAgencies.filter { $0.summary != nil }.count }
     private var withoutSummary: Int { allAgencies.count - withSummary }
-    
-
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                Text("Regulatory Overview")
+                Text("Federal Regulatory Overview")
                     .font(.largeTitle).bold()
 
                 if viewModel.isLoading {
@@ -36,15 +35,23 @@ struct GlobalDashboardView: View {
                         GroupBox(label: Label("What's Changed", systemImage: "clock.arrow.circlepath")) {
                             VStack(alignment: .leading, spacing: 12) {
                                 ForEach(Array(recentChanges.prefix(3))) { change in
-                                    HStack {
-                                        VStack(alignment: .leading) {
-                                            Text(change.agencyName).font(.subheadline).bold()
-                                            Text("Update detected on \(change.recordedAt.formatted(date: .abbreviated, time: .omitted))")
-                                                .font(.caption).foregroundColor(.secondary)
+                                    Button {
+                                        if let agency = allAgencies.first(where: { $0.slug == change.agencySlug }) {
+                                            selectedAgency = agency
                                         }
-                                        Spacer()
-                                        Image(systemName: "chevron.right").font(.caption).foregroundColor(.secondary)
+                                    } label: {
+                                        HStack {
+                                            VStack(alignment: .leading) {
+                                                Text(change.agencyName).font(.subheadline).bold()
+                                                Text("Update detected on \(change.recordedAt.formatted(date: .abbreviated, time: .omitted))")
+                                                    .font(.caption).foregroundColor(.secondary)
+                                            }
+                                            Spacer()
+                                            Image(systemName: "chevron.right").font(.caption).foregroundColor(.secondary)
+                                        }
+                                        .contentShape(Rectangle()) // Make full row tappable
                                     }
+                                    .buttonStyle(.plain)
                                     .padding(.vertical, 4)
                                     Divider()
                                 }

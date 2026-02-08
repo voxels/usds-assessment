@@ -1,0 +1,186 @@
+2026-02-08T16:53:04.585867Z ? api: Gemini AI Error: GoogleGenerativeAIFetchError: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent: [404 Not Found] models/gemini-1.5-pro is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+    at handleResponseNotOk (/workspace/node_modules/@google/generative-ai/dist/index.js:434:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async makeRequest (/workspace/node_modules/@google/generative-ai/dist/index.js:403:9)
+    at async generateContent (/workspace/node_modules/@google/generative-ai/dist/index.js:867:22)
+    at async generateSummary (/workspace/gemini.js:76:24)
+    at async Promise.all (index 2)
+    at async processAgencySummary (/workspace/index.js:366:67)
+    at async /workspace/index.js:172:32
+    at async runFullAnalysis (/workspace/index.js:195:13)
+    at async /workspace/index.js:245:24 {
+  status: 404,
+  statusText: 'Not Found',
+  errorDetails: undefined
+}
+
+2026-02-08T16:53:04.590410Z ? api: Gemini AI Error: GoogleGenerativeAIFetchError: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent: [404 Not Found] models/gemini-1.5-pro is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+    at handleResponseNotOk (/workspace/node_modules/@google/generative-ai/dist/index.js:434:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async makeRequest (/workspace/node_modules/@google/generative-ai/dist/index.js:403:9)
+    at async generateContent (/workspace/node_modules/@google/generative-ai/dist/index.js:867:22)
+    at async generateSummary (/workspace/gemini.js:76:24)
+    at async Promise.all (index 1)
+    at async processAgencySummary (/workspace/index.js:366:67)
+    at async /workspace/index.js:172:32
+    at async runFullAnalysis (/workspace/index.js:195:13)
+    at async /workspace/index.js:245:24 {
+  status: 404,
+  statusText: 'Not Found',
+  errorDetails: undefined
+}
+
+2026-02-08T16:53:04.597452Z ? api: ✅ Processed: privacy-and-civil-liberties-oversight-board
+
+2026-02-08T16:53:04.597817Z ? api: Generating AI summaries for Railroad Retirement Board...
+
+2026-02-08T16:53:04.655215Z ? api: Failed to fetch content for Title 20 on 2023-12-31: eCFR API Error (429) for /api/versioner/v1/full/2023-12-31/title-20.xml?chapter=II
+
+2026-02-08T16:53:04.705439Z ? api: Failed to fetch content for Title 20 on 2026-02-03: eCFR API Error (429) for /api/versioner/v1/full/2026-02-03/title-20.xml?chapter=II
+
+2026-02-08T16:53:04.853341Z ? api: Gemini AI Error: GoogleGenerativeAIFetchError: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent: [404 Not Found] models/gemini-1.5-pro is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+    at handleResponseNotOk (/workspace/node_modules/@google/generative-ai/dist/index.js:434:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async makeRequest (/workspace/node_modules/@google/generative-ai/dist/index.js:403:9)
+    at async generateContent (/workspace/node_modules/@google/generative-ai/dist/index.js:867:22)
+    at async generateSummary (/workspace/gemini.js:76:24)
+    at async Promise.all (index 1)
+    at async processAgencySummary (/workspace/index.js:366:67)
+    at async /workspace/index.js:172:32
+    at async runFullAnalysis (/workspace/index.js:195:13)
+    at async /workspace/index.js:245:24 {
+  status: 404,
+  statusText: 'Not Found',
+  errorDetails: undefined
+}
+
+2026-02-08T16:53:04.864342Z ? api: Gemini AI Error: GoogleGenerativeAIFetchError: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent: [404 Not Found] models/gemini-1.5-pro is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+    at handleResponseNotOk (/workspace/node_modules/@google/generative-ai/dist/index.js:434:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async makeRequest (/workspace/node_modules/@google/generative-ai/dist/index.js:403:9)
+    at async generateContent (/workspace/node_modules/@google/generative-ai/dist/index.js:867:22)
+    at async generateSummary (/workspace/gemini.js:76:24)
+    at async Promise.all (index 3)
+    at async processAgencySummary (/workspace/index.js:366:67)
+    at async /workspace/index.js:172:32
+    at async runFullAnalysis (/workspace/index.js:195:13)
+    at async /workspace/index.js:245:24 {
+  status: 404,
+  statusText: 'Not Found',
+  errorDetails: undefined
+}
+
+2026-02-08T16:53:04.866026Z ? api: Gemini AI Error: GoogleGenerativeAIFetchError: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent: [404 Not Found] models/gemini-1.5-pro is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+    at handleResponseNotOk (/workspace/node_modules/@google/generative-ai/dist/index.js:434:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async makeRequest (/workspace/node_modules/@google/generative-ai/dist/index.js:403:9)
+    at async generateContent (/workspace/node_modules/@google/generative-ai/dist/index.js:867:22)
+    at async generateSummary (/workspace/gemini.js:76:24)
+    at async Promise.all (index 2)
+    at async processAgencySummary (/workspace/index.js:366:67)
+    at async /workspace/index.js:172:32
+    at async runFullAnalysis (/workspace/index.js:195:13)
+    at async /workspace/index.js:245:24 {
+  status: 404,
+  statusText: 'Not Found',
+  errorDetails: undefined
+}
+
+2026-02-08T16:53:04.877203Z ? api: ✅ Processed: railroad-retirement-board
+
+2026-02-08T16:53:04.877548Z ? api: Generating AI summaries for Securities and Exchange Commission...
+
+2026-02-08T16:53:04.926537Z ? api: Failed to fetch content for Title 5 on 2023-12-31: eCFR API Error (429) for /api/versioner/v1/full/2023-12-31/title-5.xml?chapter=XXXIV
+
+2026-02-08T16:53:05.368185Z I api: Default STARTUP TCP probe succeeded after 1 attempt for container "worker" on port 8080.
+2026-02-08T16:53:05.673349Z ? api: [2026-02-08T16:53:05.672Z]  @firebase/database: FIREBASE WARNING: Using an unspecified index. Your data will be downloaded and filtered on the client. Consider adding ".indexOn": "slug" at /agencies to your security rules for better performance. 
+
+2026-02-08T16:53:05.674948Z ? api: Generating AI summaries for Department of Treasury...
+
+2026-02-08T16:53:12.073395Z I api: 
+2026-02-08T16:53:12.559479Z I api: 
+2026-02-08T16:53:13.751865Z I api: 
+2026-02-08T16:53:21.926207Z E api: 'Memory limit of 1024 MiB exceeded with 1031 MiB used. Consider increasing the memory limit, see https://cloud.google.com/functions/docs/configuring/memory'
+2026-02-08T16:53:30.945681Z ? api: <--- Last few GCs --->
+2026-02-08T16:53:30.945706Z ? api: [1:0x5578b5006c80]   323345 ms: Scavenge 816.4 (827.3) -> 815.6 (827.3) MB, 1.60 / 0.00 ms  (average mu = 0.333, current mu = 0.311) allocation failure; 
+2026-02-08T16:53:30.945713Z ? api: [1:0x5578b5006c80]   323350 ms: Scavenge 816.5 (827.3) -> 815.7 (827.8) MB, 1.49 / 0.00 ms  (average mu = 0.333, current mu = 0.311) allocation failure; 
+2026-02-08T16:53:30.945718Z ? api: [1:0x5578b5006c80]   323353 ms: Scavenge 816.6 (827.8) -> 815.7 (829.8) MB, 1.68 / 0.00 ms  (average mu = 0.333, current mu = 0.311) allocation failure; 
+2026-02-08T16:53:30.945726Z ? api: <--- JS stacktrace --->
+2026-02-08T16:53:30.945734Z ? api: FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
+2026-02-08T16:53:30.945740Z ? api: ----- Native stack trace -----
+2026-02-08T16:53:30.960709Z ? api:  1: 0x5578b03e1b90 node::OOMErrorHandler(char const*, v8::OOMDetails const&) [node]
+2026-02-08T16:53:30.961770Z ? api:  2: 0x5578b078f484 v8::Utils::ReportOOMFailure(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [node]
+2026-02-08T16:53:30.962575Z ? api:  3: 0x5578b078f878 v8::internal::V8::FatalProcessOutOfMemory(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [node]
+2026-02-08T16:53:30.963361Z ? api:  4: 0x5578b09caf8b  [node]
+2026-02-08T16:53:30.964351Z ? api:  5: 0x5578b09cb451 v8::internal::Heap::RecomputeLimits(v8::internal::GarbageCollector) [node]
+2026-02-08T16:53:30.965329Z ? api:  6: 0x5578b09e1caa v8::internal::Heap::PerformGarbageCollection(v8::internal::GarbageCollector, v8::internal::GarbageCollectionReason, char const*) [node]
+2026-02-08T16:53:30.966286Z ? api:  7: 0x5578b09e289d v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags) [node]
+2026-02-08T16:53:31.030274Z ? api:  8: 0x5578b09e4ce0 v8::internal::Heap::HandleGCRequest() [node]
+2026-02-08T16:53:31.031605Z ? api:  9: 0x5578b0946a8f v8::internal::StackGuard::HandleInterrupts() [node]
+2026-02-08T16:53:31.032560Z ? api: 10: 0x5578b0e24899 v8::internal::Runtime_StackGuard(int, unsigned long*, v8::internal::Isolate*) [node]
+2026-02-08T16:53:31.033570Z ? api: 11: 0x5578b129def6  [node]
+2026-02-08T16:53:31.033625361Z E api: Uncaught signal: 6, pid=1, tid=1, fault_addr=0.
+2026-02-08T16:53:31.111571Z I api: 
+2026-02-08T16:53:31.456140367Z W api: Container terminated on signal 6.
+2026-02-08T16:54:00.453965Z ? api: Gemini AI Error: GoogleGenerativeAIFetchError: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent: [404 Not Found] models/gemini-1.5-pro is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+    at handleResponseNotOk (/workspace/node_modules/@google/generative-ai/dist/index.js:434:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async makeRequest (/workspace/node_modules/@google/generative-ai/dist/index.js:403:9)
+    at async generateContent (/workspace/node_modules/@google/generative-ai/dist/index.js:867:22)
+    at async generateSummary (/workspace/gemini.js:76:24)
+    at async Promise.all (index 2)
+    at async processAgencySummary (/workspace/index.js:366:67)
+    at async /workspace/index.js:402:24 {
+  status: 404,
+  statusText: 'Not Found',
+  errorDetails: undefined
+}
+
+2026-02-08T16:54:00.465690Z ? api: Gemini AI Error: GoogleGenerativeAIFetchError: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent: [404 Not Found] models/gemini-1.5-pro is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+    at handleResponseNotOk (/workspace/node_modules/@google/generative-ai/dist/index.js:434:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async makeRequest (/workspace/node_modules/@google/generative-ai/dist/index.js:403:9)
+    at async generateContent (/workspace/node_modules/@google/generative-ai/dist/index.js:867:22)
+    at async generateSummary (/workspace/gemini.js:76:24)
+    at async Promise.all (index 1)
+    at async processAgencySummary (/workspace/index.js:366:67)
+    at async /workspace/index.js:402:24 {
+  status: 404,
+  statusText: 'Not Found',
+  errorDetails: undefined
+}
+
+2026-02-08T16:54:00.467333Z ? api: Gemini AI Error: GoogleGenerativeAIFetchError: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent: [404 Not Found] models/gemini-1.5-pro is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+    at handleResponseNotOk (/workspace/node_modules/@google/generative-ai/dist/index.js:434:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async makeRequest (/workspace/node_modules/@google/generative-ai/dist/index.js:403:9)
+    at async generateContent (/workspace/node_modules/@google/generative-ai/dist/index.js:867:22)
+    at async generateSummary (/workspace/gemini.js:76:24)
+    at async Promise.all (index 0)
+    at async processAgencySummary (/workspace/index.js:366:67)
+    at async /workspace/index.js:402:24 {
+  status: 404,
+  statusText: 'Not Found',
+  errorDetails: undefined
+}
+
+2026-02-08T16:54:00.467970Z ? api: Gemini AI Error: GoogleGenerativeAIFetchError: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent: [404 Not Found] models/gemini-1.5-pro is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+    at handleResponseNotOk (/workspace/node_modules/@google/generative-ai/dist/index.js:434:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async makeRequest (/workspace/node_modules/@google/generative-ai/dist/index.js:403:9)
+    at async generateContent (/workspace/node_modules/@google/generative-ai/dist/index.js:867:22)
+    at async generateSummary (/workspace/gemini.js:76:24)
+    at async Promise.all (index 3)
+    at async processAgencySummary (/workspace/index.js:366:67)
+    at async /workspace/index.js:402:24 {
+  status: 404,
+  statusText: 'Not Found',
+  errorDetails: undefined
+}
+
+2026-02-08T16:54:00.644201Z I api: 
+2026-02-08T16:54:51.692184041Z N scheduledanalysis: {"@type":"type.googleapis.com/google.cloud.audit.AuditLog","authenticationInfo":{"principalEmail":"voxels@noisederived.com","principalSubject":"user:voxels@noisederived.com","oauthInfo":{"oauthClientId":"563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com"}},"requestMetadata":{"callerIp":"71.183.65.240","callerSuppliedUserAgent":"FirebaseCLI/15.5.1,gzip(gfe),gzip(gfe)","requestAttributes":{"time":"2026-02-08T16:54:50.948065597Z","auth":{}},"destinationAttributes":{}},"serviceName":"cloudfunctions.googleapis.com","methodName":"google.cloud.functions.v2.FunctionService.UpdateFunction","authorizationInfo":[{"resource":"projects/usds-assessment-4c894/locations/us-central1/functions/scheduledanalysis","permission":"cloudfunctions.functions.update","granted":true,"resourceAttributes":{"service":"cloudfunctions.googleapis.com","name":"projects/usds-assessment-4c894/locations/us-central1/functions/scheduledanalysis","type":"cloudfunctions.googleapis.com/Function"},"permissionType":"ADMIN_WRITE"}],"resourceName":"projects/usds-assessment-4c894/locations/us-central1/functions/scheduledanalysis","request":{"update_mask":{"paths":["name","build_config.runtime","build_config.entry_point","build_config.source.storage_source.bucket","build_config.source.storage_source.object","build_config.environment_variables","build_config.source_token","service_config.environment_variables","service_config.secret_environment_variables","service_config.ingress_settings","service_config.timeout_seconds","service_config.service_account_email","service_config.available_memory","service_config.min_instance_count","service_config.max_instance_count","service_config.max_instance_request_concurrency","service_config.available_cpu","service_config.vpc_connector","service_config.vpc_connector_egress_settings","labels"]},"@type":"type.googleapis.com/google.cloud.functions.v2.UpdateFunctionRequest","function":{"build_config":{"runtime":"nodejs20","entry_point":"scheduledanalysis","source":{}},"labels":{"firebase-functions-hash":"ad8b263e1750312ef907246c25426085d71658a8","deployment-scheduled":"true","deployment-tool":"cli-firebase"},"name":"projects/usds-assessment-4c894/locations/us-central1/functions/scheduledanalysis","service_config":{"available_cpu":"1","available_memory":"2Gi","timeout_seconds":540,"max_instance_request_concurrency":80,"secret_environment_variables":[{"key":"GOOGLE_AI_API_KEY","project_id":"usds-assessment-4c894","version":"1","secret":"GOOGLE_AI_API_KEY"}]}}},"response":{"@type":"type.googleapis.com/google.longrunning.Operation"},"resourceLocation":{"currentLocations":["us-central1"]}}
+2026-02-08T16:54:51.737453834Z N api: {"@type":"type.googleapis.com/google.cloud.audit.AuditLog","authenticationInfo":{"principalEmail":"voxels@noisederived.com","principalSubject":"user:voxels@noisederived.com","oauthInfo":{"oauthClientId":"563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com"}},"requestMetadata":{"callerIp":"71.183.65.240","callerSuppliedUserAgent":"FirebaseCLI/15.5.1,gzip(gfe),gzip(gfe)","requestAttributes":{"time":"2026-02-08T16:54:50.991920723Z","auth":{}},"destinationAttributes":{}},"serviceName":"cloudfunctions.googleapis.com","methodName":"google.cloud.functions.v2.FunctionService.UpdateFunction","authorizationInfo":[{"resource":"projects/usds-assessment-4c894/locations/us-central1/functions/api","permission":"cloudfunctions.functions.update","granted":true,"resourceAttributes":{"service":"cloudfunctions.googleapis.com","name":"projects/usds-assessment-4c894/locations/us-central1/functions/api","type":"cloudfunctions.googleapis.com/Function"},"permissionType":"ADMIN_WRITE"}],"resourceName":"projects/usds-assessment-4c894/locations/us-central1/functions/api","request":{"update_mask":{"paths":["name","build_config.runtime","build_config.entry_point","build_config.source.storage_source.bucket","build_config.source.storage_source.object","build_config.environment_variables","build_config.source_token","service_config.environment_variables","service_config.secret_environment_variables","service_config.ingress_settings","service_config.timeout_seconds","service_config.service_account_email","service_config.available_memory","service_config.min_instance_count","service_config.max_instance_count","service_config.max_instance_request_concurrency","service_config.available_cpu","service_config.vpc_connector","service_config.vpc_connector_egress_settings","labels"]},"@type":"type.googleapis.com/google.cloud.functions.v2.UpdateFunctionRequest","function":{"labels":{"deployment-tool":"cli-firebase","firebase-functions-hash":"ad8b263e1750312ef907246c25426085d71658a8"},"service_config":{"timeout_seconds":300,"available_memory":"1024Mi","max_instance_request_concurrency":80,"available_cpu":"1","secret_environment_variables":[{"key":"GOOGLE_AI_API_KEY","secret":"GOOGLE_AI_API_KEY","project_id":"usds-assessment-4c894","version":"1"}]},"build_config":{"runtime":"nodejs20","entry_point":"api","source":{}},"name":"projects/usds-assessment-4c894/locations/us-central1/functions/api"}},"response":{"@type":"type.googleapis.com/google.longrunning.Operation"},"resourceLocation":{"currentLocations":["us-central1"]}}
+2026-02-08T16:55:47.663665Z I api: Starting new instance. Reason: DEPLOYMENT_ROLLOUT - Instance started due to traffic shifting between revisions due to deployment, traffic split adjustment, or deployment health check.
+2026-02-08T16:55:47.674997Z I scheduledanalysis: Starting new instance. Reason: DEPLOYMENT_ROLLOUT - Instance started due to traffic shifting between revisions due to deployment, traffic split adjustment, or deployment health check.
+2026-02-08T16:55:49.520182Z I api: Default STARTUP TCP probe succeeded after 1 attempt for container "worker" on port 8080.

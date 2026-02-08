@@ -13,7 +13,9 @@ struct ContentView: View {
                         activeTool: $vm.activeTool)
         } content: {
             if let tool = viewModel.activeTool, tool == .changes {
-                ChangesView(selectedAgency: $vm.selectedAgency, onRefresh: {
+                ChangesView(selectedAgency: $vm.selectedAgency,
+                            globalAmendments: viewModel.globalAmendments,
+                            onRefresh: {
                     await viewModel.syncOnLaunch()
                 })
             } else if viewModel.selectedDepartment != nil {
@@ -42,13 +44,26 @@ struct ContentView: View {
         }
     }
 
+    @Query private var allAgencies: [Agency] // Add Query to access data
+
     @ViewBuilder
     private var detailContent: some View {
         if let agency = viewModel.selectedAgency {
             AgencyDetailView(agency: agency, dataService: NetworkService.shared)
                 .id(agency.persistentModelID) // Force recreation when selection changes
+        } else if let department = viewModel.selectedDepartment {
+            // Filter agencies for this department
+            let deptAgencies = allAgencies.filter {
+                $0.parentAgencyName == department.name || $0.slug == department.slug
+            }.sorted { $0.name < $1.name }
+            
+            ScrollView {
+                DepartmentDashboardView(department: department, agencies: deptAgencies, selectedAgency: $viewModel.selectedAgency)
+                    .padding()
+            }
+            .navigationTitle(department.shortName ?? department.name)
         } else {
-            GlobalDashboardView(activeTool: $viewModel.activeTool)
+            GlobalDashboardView(activeTool: $viewModel.activeTool, selectedAgency: $viewModel.selectedAgency)
         }
     }
 

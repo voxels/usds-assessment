@@ -6,4 +6,5 @@ protocol DataServiceProtocol: Sendable {
     func fetchSummary(for slug: String, force: Bool) async throws -> SummaryTransfer
     func fetchStats() async throws -> StatsTransfer
     func fetchRecentAmendments(for slug: String) async throws -> [AmendmentTransfer]
+    func fetchGlobalAmendments() async throws -> [AmendmentTransfer]
 }

@@ -31,6 +31,7 @@ final class DashboardViewModel {
 
     func loadStats() async {
         isLoading = true
+        error = nil
         do {
             let fetchedStats = try await dataService.fetchStats()
             await MainActor.run {

@@ -10,16 +10,35 @@ const xmlParser = new XMLParser();
 const BASE_URL = "https://www.ecfr.gov";
 
 /**
- * Generic fetch helper with error handling
+ * Generic fetch helper with error handling and retries
  */
-async function fetchFromEcfr(endpoint) {
+async function fetchFromEcfr(endpoint, retries = 3) {
     const url = `${BASE_URL}${endpoint}`;
-    // console.log(`Fetching: ${url}`); // Debug logging (optional)
-    const response = await fetch(url);
-    if (!response.ok) {
-        throw new Error(`eCFR API Error (${response.status}) for ${endpoint}`);
+
+    for (let i = 0; i < retries; i++) {
+        try {
+            const response = await fetch(url);
+
+            // Success
+            if (response.ok) return response;
+
+            // Retry on 429 (Too Many Requests) or 5xx (Server Errors)
+            if (response.status === 429 || response.status >= 500) {
+                if (i === retries - 1) throw new Error(`eCFR API Error (${response.status}) for ${endpoint}`);
+                // Exponential backoff: 1s, 2s, 4s
+                const delay = 1000 * Math.pow(2, i);
+                console.warn(`eCFR ${response.status} for ${endpoint}. Retrying in ${delay}ms...`);
+                await new Promise(r => setTimeout(r, delay));
+                continue;
+            }
+
+            throw new Error(`eCFR API Error (${response.status}) for ${endpoint}`);
+        } catch (error) {
+            if (i === retries - 1) throw error;
+            const delay = 1000 * Math.pow(2, i);
+            await new Promise(r => setTimeout(r, delay));
+        }
     }
-    return response;
 }
 
 // 1. Metadata: Titles
@@ -60,8 +79,8 @@ async function fetchFullContent(date, title, chapter = null) {
 
 // 4. Search: Recent Results
 // Fetches recent amendments for an agency
-async function fetchRecentAmendments(slug, limit = 5) {
-    const endpoint = `/api/search/v1/results?agency_slugs[]=${slug}&per_page=${limit}&order=newest_first`;
+async function fetchRecentAmendments(slug = null, limit = 20) {
+    const endpoint = `/api/search/v1/results?per_page=${limit}&order=newest_first` + (slug ? `&agency_slugs[]=${slug}` : "");
     const res = await fetchFromEcfr(endpoint);
     const data = await res.json();
     return data.results || [];

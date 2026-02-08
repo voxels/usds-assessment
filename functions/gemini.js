@@ -9,12 +9,76 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 let genAI = null;
 let model = null;
 
-function getAiModel(apiKey) {
+/**
+ * Fetches available models from the API to determine the best match.
+ * @param {string} apiKey
+ * @returns {Promise<string>} The model name to use.
+ */
+async function getBestModelName(apiKey) {
+    try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+        const response = await fetch(url);
+        if (!response.ok) {
+            console.warn(`Failed to list models: ${response.statusText}`);
+            return "gemini-1.5-flash"; // Default assumption
+        }
+
+        const data = await response.json();
+        const models = data.models || [];
+
+        console.log("Available Models:", models.map(m => m.name));
+
+        // Prioritize models
+        // Dynamic selection: Find best available model supporting content generation
+        // Criteria: 1.5-Flash > 1.5-Pro > Pro
+        const contentModels = models.filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
+
+        // 1. Look for any Gemini 1.5 Flash variant
+        let bestMatch = contentModels.find(m => m.name.includes("gemini-1.5-flash"));
+
+        // 2. Fallback to Gemini 1.5 Pro
+        if (!bestMatch) {
+            bestMatch = contentModels.find(m => m.name.includes("gemini-1.5-pro"));
+        }
+
+        // 3. Fallback to any Gemini Pro
+        if (!bestMatch) {
+            bestMatch = contentModels.find(m => m.name.includes("gemini-pro"));
+        }
+
+        // 4. Last resort: ANY model that supports generateContent
+        if (!bestMatch) {
+            bestMatch = contentModels[0];
+        }
+
+        if (bestMatch) {
+            console.log(`Selected model from API list: ${bestMatch.name}`);
+            // SDK expects model name WITHOUT 'models/' prefix
+            return bestMatch.name.replace(/^models\//, "");
+        }
+
+        return "gemini-1.5-flash";
+    } catch (e) {
+        console.warn("Error listing models, falling back to default:", e);
+        return "gemini-1.5-flash";
+    }
+}
+
+async function getAiModel(apiKey) {
     if (!apiKey) return null;
 
     if (!model) {
         genAI = new GoogleGenerativeAI(apiKey);
-        model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+
+        // Dynamically pick the best model
+        const modelName = await getBestModelName(apiKey);
+
+        // Gemini 1.5 models require v1beta, gemini-pro works on v1 but v1beta is safe for all
+        const apiVersion = "v1beta";
+
+        console.log(`Initializing Gemini with model: ${modelName} (apiVersion: ${apiVersion})`);
+
+        model = genAI.getGenerativeModel({ model: modelName }, { apiVersion: apiVersion });
     }
     return model;
 }
@@ -26,7 +90,7 @@ function getAiModel(apiKey) {
  * @returns {Promise<string>}
  */
 async function generateSummary(content, context, historicalContent = null, apiKey = null) {
-    const aiModel = getAiModel(apiKey || process.env.GOOGLE_AI_API_KEY);
+    const aiModel = await getAiModel(apiKey || process.env.GOOGLE_AI_API_KEY);
     if (!aiModel) {
         return "Error: GOOGLE_AI_API_KEY is not set. Please provide an API key to enable AI summaries.";
     }
@@ -55,7 +119,7 @@ async function generateSummary(content, context, historicalContent = null, apiKe
             ${truncatedContent}`;
             break;
         case "recent-batch":
-            prompt = `Summarize the most recent batch of changes in this regulatory text. What was the intent behind the latest updates?: \n\n${truncatedContent}`;
+            prompt = `Analyze the "RECENT AMENDMENTS" section provided in the text below (if available). Summarize the most recent batch of changes. What was the intent behind the latest updates? If no recent amendments are listed, summarize the most significant recent policy shift found in the text: \n\n${truncatedContent}`;
             break;
         case "title-level-change":
             prompt = `Summarize the very last significant change recorded in the Title hierarchy associated with this agency. What was the specific section affected and why?: \n\n${truncatedContent}`;

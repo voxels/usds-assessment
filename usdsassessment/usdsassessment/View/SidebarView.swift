@@ -28,6 +28,7 @@ struct SidebarView: View {
     @Binding var activeTool: SidebarTool?
     @State private var sortOrder: DepartmentSort = .alphabetical
     @State private var searchText = ""
+    @State private var showSettings = false
     @Query private var allAgencies: [Agency] // Needed for global search
 
     var favorites: [Agency] {
@@ -115,7 +116,19 @@ struct SidebarView: View {
             }
         }
         .navigationTitle("Departments")
-        .searchable(text: $searchText, placement: .sidebar, prompt: "Search Agencies")
+        .searchable(text: $searchText, placement:.navigationBarDrawer(displayMode: .always), prompt: "Search Agencies")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showSettings = true
+                } label: {
+                    Image(systemName: "gearshape")
+                }
+            }
+        }
+        .sheet(isPresented: $showSettings) {
+             SettingsView()
+        }
     }
 
 
