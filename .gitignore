@@ -1,0 +1,72 @@
+# ──────────────────────────────────────────────
+# Node.js / Firebase Functions (functions/)
+# ──────────────────────────────────────────────
+functions/node_modules/
+functions/.env
+functions/.env.local
+functions/.secret.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ──────────────────────────────────────────────
+# Firebase
+# ──────────────────────────────────────────────
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+database-debug.log
+
+# ──────────────────────────────────────────────
+# Xcode / Swift (usdsassessment/)
+# ──────────────────────────────────────────────
+
+# Build products
+usdsassessment/build/
+DerivedData/
+
+# Xcode user-specific files
+usdsassessment/usdsassessment.xcodeproj/project.xcworkspace/xcuserdata/
+usdsassessment/usdsassessment.xcodeproj/xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+
+# Swift Package Manager
+usdsassessment/.build/
+usdsassessment/.swiftpm/
+usdsassessment/Packages/
+
+# CocoaPods (if ever used)
+usdsassessment/Pods/
+
+# Xcode temp/cache
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# ──────────────────────────────────────────────
+# macOS
+# ──────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# ──────────────────────────────────────────────
+# IDEs / Editors
+# ──────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
